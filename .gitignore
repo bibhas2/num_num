@@ -1,0 +1,4 @@
+*.pyc
+*.tfl*
+.DS_Store
+.vscode/
