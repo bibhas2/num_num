@@ -140,6 +140,15 @@ def predict():
     print validateClasses
     print p
 
+def classToString(classVector):
+    classMatrix = classVector.reshape((INPUT_CHAR_COUNT, len(ALLOWED_CHARS)))
+    charIndices = np.argmax(classMatrix, 1)
+    result = ""
+    for i in charIndices:
+        result += str(ALLOWED_CHARS[i])
+    
+    return result
+
 #network = build_model_tf()
 #print network.get_shape()
 
@@ -147,6 +156,8 @@ def predict():
 # predict()
 trainingImages, trainingClasses, trainingStringResults = gen_images(1)
 print trainingClasses[0]
+print trainingStringResults[0]
+print classToString(trainingClasses[0])
 
 #plt.imshow(trainingImages[0])
 # pil_im = Image.open('824.65.png', 'r')
