@@ -71,9 +71,9 @@ def build_model_tf():
     
     #Get the final size of the tensor after all the convolution and
     #pooling
-    finalHeight = network.get_shape()[1]
-    finalWidth = network.get_shape()[2]
-    finalDepth = network.get_shape()[3]
+    finalHeight = network.get_shape()[1].value
+    finalWidth = network.get_shape()[2].value
+    finalDepth = network.get_shape()[3].value
 
     #Build the fully connected layer.
     #A fully connected layer can work with depth 1 input only.
@@ -90,10 +90,17 @@ def build_model_tf():
     #Number of neurons = number of classes = (letter positions) * (number of possible letters)
     numNeurons = len(ALLOWED_CHARS) * len(ALLOWED_CHARS)
     #Dimension of weight matrix = number of neurons from previous layer X number of classes
-    Wo = weight_variable([network.get_shape()[1], numNeurons])
+    previousNumNeurons = network.get_shape()[1].value
+    Wo = weight_variable([previousNumNeurons, numNeurons])
     Bo = bias_variable([numNeurons])
+    network = tf.matmul(network, Wo) + Bo
 
     return network
+
+def train_tf():
+    trainingImages, trainingClasses, trainingStringResults = gen_images(2000)
+    network = build_model_tf()
+
     
 def train():
     trainingImages, trainingClasses, trainingStringResults = gen_images(2000)
@@ -124,6 +131,7 @@ def predict():
     print p
 
 network = build_model_tf()
+print network.get_shape()
 
 #train()
 # predict()
