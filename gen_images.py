@@ -5,11 +5,6 @@ from PIL import ImageDraw
 import random
 import numpy as np
 import tensorflow as tf
-import tflearn
-from tflearn.data_utils import shuffle
-from tflearn.layers.core import input_data, dropout, fully_connected
-from tflearn.layers.conv import conv_2d, max_pool_2d
-from tflearn.layers.estimator import regression
 import matplotlib.pyplot as plt
 from conv_util import conv_layer, max_pool_layer, weight_variable, bias_variable
 
@@ -48,23 +43,6 @@ def gen_images(sampleCount):
         stringResult.append(filledAmount)
 
     return (imageResult, classResult, stringResult)
-
-def build_model():
-    network = input_data(shape=[None, IMAGE_HEIGHT, IMAGE_WIDTH, 3])
-    network = conv_2d(network, 48, 5, activation='relu')
-    network = max_pool_2d(network, 2)
-    network = conv_2d(network, 64, 5, activation='relu')
-    network = max_pool_2d(network, 2)
-    network = conv_2d(network, 128, 5, activation='relu')
-    network = max_pool_2d(network, 2)
-    network = fully_connected(network, 2048, activation='relu')
-    network = fully_connected(network, len(ALLOWED_CHARS), activation='softmax')
-    network = regression(network, optimizer='adam',
-                     loss='categorical_crossentropy',
-                     learning_rate=0.001)
-    model = tflearn.DNN(network)
-
-    return model
 
 def build_model_tf():
     #Input data - a tensor of RGB (3 channel) images
@@ -110,35 +88,6 @@ def build_model_tf():
 def train_tf():
     trainingImages, trainingClasses, trainingStringResults = gen_images(2000)
     network = build_model_tf()
-
-    
-def train():
-    trainingImages, trainingClasses, trainingStringResults = gen_images(2000)
-    validateImages, validateClasses, validateStringResults = gen_images(200)
-    model = build_model()
-
-    # print imageResult.shape
-    # print classResult[0]
-    # print stringResult[0]
-
-    model.fit(trainingImages, trainingClasses, n_epoch=10, validation_set=(validateImages, validateClasses), batch_size=100)
-
-    model.save("weights.tfl")
-
-def predict():
-    validateImages, validateClasses, validateStringResults = gen_images(1)
-    model = build_model()
-
-    model.load("./weights.tfl")    
-
-    # print imageResult.shape
-    # print classResult[0]
-    # print stringResult[0]
-
-    p = model.predict(validateImages)
-
-    print validateClasses
-    print p
 
 def classToString(classVector):
     classMatrix = classVector.reshape((INPUT_CHAR_COUNT, len(ALLOWED_CHARS)))
