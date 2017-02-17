@@ -47,8 +47,6 @@ def gen_images(sampleCount):
 def build_model_tf():
     #Input data - a tensor of RGB (3 channel) images
     X = tf.placeholder(tf.float32, [None, IMAGE_HEIGHT, IMAGE_WIDTH, 3])
-    #Classifications of input data
-    Y_ = tf.placeholder(tf.float32, [None, 10])
 
     network = conv_layer(X, 48, 5, 1)
     network = max_pool_layer(network, 2, 2) #1
@@ -81,13 +79,31 @@ def build_model_tf():
     previousNumNeurons = network.get_shape()[1].value
     Wo = weight_variable([previousNumNeurons, numNeurons])
     Bo = bias_variable([numNeurons])
-    network = tf.matmul(network, Wo) + Bo
+    Ylogits = tf.matmul(network, Wo) + Bo
+    network = tf.nn.softmax(Ylogits)
 
-    return network
+    return (network, Ylogits, X)
 
 def train_tf():
-    trainingImages, trainingClasses, trainingStringResults = gen_images(2000)
-    network = build_model_tf()
+    BATCH_SIZE = 500
+    ITERATION_COUNT = 10
+
+    (network, Ylogits, X) = build_model_tf()
+    #For training classes
+    Y_ = tf.placeholder(tf.float32, [None, INPUT_CHAR_COUNT * len(ALLOWED_CHARS)])
+    cross_entropy = tf.nn.softmax_cross_entropy_with_logits(logits=Ylogits, labels=Y_)
+    cross_entropy = tf.reduce_mean(cross_entropy) * BATCH_SIZE
+    train_step = tf.train.AdamOptimizer(0.001).minimize(cross_entropy)
+
+    # init
+    init = tf.global_variables_initializer()
+    sess = tf.Session()
+    sess.run(init)
+
+    for i in range(0, ITERATION_COUNT):
+        trainingImages, trainingClasses, trainingStringResults = gen_images(BATCH_SIZE)
+        
+        sess.run(train_step, {X: trainingImages, Y_: trainingClasses})
 
 def classToString(classVector):
     classMatrix = classVector.reshape((INPUT_CHAR_COUNT, len(ALLOWED_CHARS)))
@@ -101,12 +117,12 @@ def classToString(classVector):
 #network = build_model_tf()
 #print network.get_shape()
 
-#train()
+train_tf()
 # predict()
-trainingImages, trainingClasses, trainingStringResults = gen_images(1)
-print trainingClasses[0]
-print trainingStringResults[0]
-print classToString(trainingClasses[0])
+# trainingImages, trainingClasses, trainingStringResults = gen_images(1)
+# print trainingClasses[0]
+# print trainingStringResults[0]
+# print classToString(trainingClasses[0])
 
 #plt.imshow(trainingImages[0])
 # pil_im = Image.open('824.65.png', 'r')
