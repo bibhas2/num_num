@@ -6,126 +6,97 @@ import random
 import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
-from conv_util import conv_layer, max_pool_layer, weight_variable, bias_variable
+from conv_util import conv_layer, fully_connected_layer, readout_layer, create_optimizer
 
-IMAGE_WIDTH = 128
-IMAGE_HEIGHT = 64
-ALLOWED_CHARS = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '.']
-INPUT_CHAR_COUNT = 6 #How many chars in a sample?
+IMAGE_WIDTH = 28
+IMAGE_HEIGHT = 28
+IMAGE_DEPTH = 3
 
-def gen_images(sampleCount):
-    font = ImageFont.truetype("fake receipt.ttf", 20)
+def gen_images(sampleCount, saveImages=False):
+    fontList = [
+        "Roboto-Medium.ttf", 
+        "Slabo27px-Regular.ttf", 
+        "Montserrat-Regular.ttf", 
+        "Merriweather-Regular.ttf"]
 
-    imageResult = np.zeros((sampleCount, IMAGE_HEIGHT, IMAGE_WIDTH, 3))
-    classResult = np.zeros((sampleCount, INPUT_CHAR_COUNT * len(ALLOWED_CHARS)))
-    stringResult = []
+    imageResult = np.zeros((sampleCount, IMAGE_HEIGHT, IMAGE_WIDTH, IMAGE_DEPTH))
+    classResult = np.zeros((sampleCount, 10))
 
     for i in range(0, sampleCount):
+        fontSize = random.randint(19, 21)
+        fontIndex = random.randint(0, len(fontList) - 1)
+        font = ImageFont.truetype(fontList[fontIndex], fontSize)
+
         img = Image.new("RGB", (IMAGE_WIDTH, IMAGE_HEIGHT), (0,0,0))
         draw = ImageDraw.Draw(img)
 
-        amount = str(random.randrange(100000.00) / 100.0)
-        filledAmount = amount.zfill(INPUT_CHAR_COUNT)
-        draw.text((20,20), filledAmount, (255, 255, 255), font=font)
+        amount = random.randint(0, 9)
+        xPos = random.randint(2, 10)
+        yPos = random.randint(2, 10)
+        draw.text((xPos, yPos), str(amount), (255, 255, 255), font=font)
+        del draw
+        
+        if saveImages:
+            img.save("image-" + str(i) + ".png")
 
         imageResult[i] = np.asarray(img) 
 
-        thisClass = np.zeros((INPUT_CHAR_COUNT, len(ALLOWED_CHARS)))
-        charList = list(filledAmount)
+        thisClass = np.zeros(10)
+        thisClass[amount] = 1.0
 
-        for (charPosition, char) in enumerate(charList):
-            charClass = ALLOWED_CHARS.index(char)
-            thisClass[charPosition, charClass] = 1.0
+        classResult[i] = thisClass
 
-        #Unroll the class matrix
-        classResult[i] = thisClass.reshape(INPUT_CHAR_COUNT * len(ALLOWED_CHARS))
-        #img.save(filledAmount + ".png")
-        stringResult.append(filledAmount)
+    return (imageResult, classResult)
 
-    return (imageResult, classResult, stringResult)
+X = tf.placeholder(tf.float32, [None, IMAGE_HEIGHT, IMAGE_WIDTH, IMAGE_DEPTH])
+Y_ = tf.placeholder(tf.float32, [None, 10])
 
-def build_model_tf():
-    #Input data - a tensor of RGB (3 channel) images
-    X = tf.placeholder(tf.float32, [None, IMAGE_HEIGHT, IMAGE_WIDTH, 3])
+# three convolutional layers with their channel counts, and a
+# fully connected layer (tha last layer has 10 softmax neurons)
+K = 4  # first convolutional layer output depth
+L = 8  # second convolutional layer output depth
+M = 12  # third convolutional layer
+N = 200  # fully connected layer
 
-    network = conv_layer(X, 48, 5, 1)
-    network = max_pool_layer(network, 2, 2) #1
-    network = conv_layer(network, 64, 5, 1)
-    network = max_pool_layer(network, 2, 2) #2
-    network = conv_layer(network, 128, 5, 1)
-    network = max_pool_layer(network, 2, 2) #3
-    
-    #Get the final size of the tensor after all the convolution and
-    #pooling
-    finalHeight = network.get_shape()[1].value
-    finalWidth = network.get_shape()[2].value
-    finalDepth = network.get_shape()[3].value
+# The model
+Y1 = conv_layer(X, K, 5, 1)
+Y2 = conv_layer(Y1, L, 5, 2)
+Y3 = conv_layer(Y2, M, 5, 2)
+Y4 = fully_connected_layer(Y3, N)
+Ylogits, Y = readout_layer(Y4, 10)
 
-    #Build the fully connected layer.
-    #A fully connected layer can work with depth 1 input only.
-    #Unroll the output from the last pooling layer into a 2D matrix
-    #The X is already transposed this way
-    Xf = tf.reshape(network, shape=[-1, finalHeight * finalWidth * finalDepth])
-    numNeurons = 2048
-    Wf = weight_variable([finalHeight * finalWidth * finalDepth, numNeurons])
-    Bf = bias_variable([numNeurons])
-    network = tf.nn.relu(tf.matmul(Xf, Wf) + Bf)
+train_step, accuracy = create_optimizer(Ylogits, Y, Y_)
 
-    #Build the output layer. One neuron per class. 
-    #For each letter position we need probability of each letter type.
-    #Number of neurons = number of classes = (letter positions) * (number of possible letters)
-    numNeurons = INPUT_CHAR_COUNT * len(ALLOWED_CHARS)
-    #Dimension of weight matrix = number of neurons from previous layer X number of classes
-    previousNumNeurons = network.get_shape()[1].value
-    Wo = weight_variable([previousNumNeurons, numNeurons])
-    Bo = bias_variable([numNeurons])
-    Ylogits = tf.matmul(network, Wo) + Bo
-    network = tf.nn.softmax(Ylogits)
+# init
+init = tf.global_variables_initializer()
+sess = tf.Session()
+sess.run(init)
 
-    return (network, Ylogits, X)
+# You can call this function in a loop to train the model, 100 images at a time
+def training_step(i):
+    # training on batches of 100 images with 100 labels
+    # batch_X, batch_Y = mnist.train.next_batch(100)
+    batch_X, batch_Y = gen_images(100)
 
-def train_tf():
-    BATCH_SIZE = 500
-    ITERATION_COUNT = 10
+    learning_rate = 0.001
+    #Compute accuracy every once in a while
+    if i % 20 == 0:
+        a = sess.run(accuracy, {X: batch_X, Y_: batch_Y})
+        print("Batch: " + str(i) + ": accuracy:" + str(a))
 
-    (network, Ylogits, X) = build_model_tf()
-    #For training classes
-    Y_ = tf.placeholder(tf.float32, [None, INPUT_CHAR_COUNT * len(ALLOWED_CHARS)])
-    cross_entropy = tf.nn.softmax_cross_entropy_with_logits(logits=Ylogits, labels=Y_)
-    cross_entropy = tf.reduce_mean(cross_entropy) * BATCH_SIZE
-    train_step = tf.train.AdamOptimizer(0.001).minimize(cross_entropy)
+    # the backpropagation training step
+    sess.run(train_step, {X: batch_X, Y_: batch_Y})
 
-    # init
-    init = tf.global_variables_initializer()
-    sess = tf.Session()
-    sess.run(init)
+for batch in range(0, 400):
+    training_step(batch)
 
-    for i in range(0, ITERATION_COUNT):
-        trainingImages, trainingClasses, trainingStringResults = gen_images(BATCH_SIZE)
-        
-        sess.run(train_step, {X: trainingImages, Y_: trainingClasses})
 
-def classToString(classVector):
-    classMatrix = classVector.reshape((INPUT_CHAR_COUNT, len(ALLOWED_CHARS)))
-    charIndices = np.argmax(classMatrix, 1)
-    result = ""
-    for i in charIndices:
-        result += str(ALLOWED_CHARS[i])
-    
-    return result
+test_X, test_Y = gen_images(10, True)
 
-#network = build_model_tf()
-#print network.get_shape()
+# a = sess.run(accuracy, {X: test_X, Y_: test_Y})
+# print("Test accuracy:" + str(a))
 
-train_tf()
-# predict()
-# trainingImages, trainingClasses, trainingStringResults = gen_images(1)
-# print trainingClasses[0]
-# print trainingStringResults[0]
-# print classToString(trainingClasses[0])
+predictions = sess.run(Y, {X: test_X})
 
-#plt.imshow(trainingImages[0])
-# pil_im = Image.open('824.65.png', 'r')
-# plt.imshow(np.asarray(pil_im))
-#plt.show()
-#pil_im.show()
+print np.argmax(predictions, 1)
+print np.argmax(test_Y, 1)
