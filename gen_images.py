@@ -11,6 +11,7 @@ from conv_util import conv_layer, fully_connected_layer, readout_layer, create_o
 IMAGE_WIDTH = 28
 IMAGE_HEIGHT = 28
 IMAGE_DEPTH = 3
+ALLOWED_CHARS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
 
 def gen_images(sampleCount, saveImages=False):
     fontList = [
@@ -19,37 +20,37 @@ def gen_images(sampleCount, saveImages=False):
         "Montserrat-Regular.ttf", 
         "Merriweather-Regular.ttf"]
 
-    imageResult = np.zeros((sampleCount, IMAGE_HEIGHT, IMAGE_WIDTH, IMAGE_DEPTH))
-    classResult = np.zeros((sampleCount, 10))
+    imageResult = np.zeros((sampleCount * len(ALLOWED_CHARS), IMAGE_HEIGHT, IMAGE_WIDTH, IMAGE_DEPTH))
+    classResult = np.zeros((sampleCount * len(ALLOWED_CHARS), len(ALLOWED_CHARS)))
 
-    for i in range(0, sampleCount):
-        fontSize = random.randint(19, 21)
-        fontIndex = random.randint(0, len(fontList) - 1)
-        font = ImageFont.truetype(fontList[fontIndex], fontSize)
+    for charIndex, ch in enumerate(ALLOWED_CHARS):
+        for i in range(0, sampleCount):
+            fontSize = random.randint(19, 21)
+            fontIndex = random.randint(0, len(fontList) - 1)
+            font = ImageFont.truetype(fontList[fontIndex], fontSize)
 
-        img = Image.new("RGB", (IMAGE_WIDTH, IMAGE_HEIGHT), (0,0,0))
-        draw = ImageDraw.Draw(img)
+            img = Image.new("RGB", (IMAGE_WIDTH, IMAGE_HEIGHT), (0,0,0))
+            draw = ImageDraw.Draw(img)
 
-        amount = random.randint(0, 9)
-        xPos = random.randint(2, 10)
-        yPos = random.randint(2, 10)
-        draw.text((xPos, yPos), str(amount), (255, 255, 255), font=font)
-        del draw
-        
-        if saveImages:
-            img.save("image-" + str(i) + ".png")
+            xPos = random.randint(2, 10)
+            yPos = random.randint(2, 10)
+            draw.text((xPos, yPos), ch, (255, 255, 255), font=font)
+            del draw
+            
+            if saveImages:
+                img.save("image-" + str(charIndex * sampleCount + i) + ".png")
 
-        imageResult[i] = np.asarray(img) 
+            imageResult[charIndex * sampleCount + i] = np.asarray(img) 
 
-        thisClass = np.zeros(10)
-        thisClass[amount] = 1.0
+            thisClass = np.zeros(len(ALLOWED_CHARS))
+            thisClass[charIndex] = 1.0
 
-        classResult[i] = thisClass
+            classResult[charIndex * sampleCount + i] = thisClass
 
     return (imageResult, classResult)
 
 X = tf.placeholder(tf.float32, [None, IMAGE_HEIGHT, IMAGE_WIDTH, IMAGE_DEPTH])
-Y_ = tf.placeholder(tf.float32, [None, 10])
+Y_ = tf.placeholder(tf.float32, [None, len(ALLOWED_CHARS)])
 
 # three convolutional layers with their channel counts, and a
 # fully connected layer (tha last layer has 10 softmax neurons)
@@ -63,7 +64,7 @@ Y1 = conv_layer(X, K, 5, 1)
 Y2 = conv_layer(Y1, L, 5, 2)
 Y3 = conv_layer(Y2, M, 5, 2)
 Y4 = fully_connected_layer(Y3, N)
-Ylogits, Y = readout_layer(Y4, 10)
+Ylogits, Y = readout_layer(Y4, len(ALLOWED_CHARS))
 
 train_step, accuracy = create_optimizer(Ylogits, Y, Y_)
 
@@ -91,7 +92,7 @@ for batch in range(0, 400):
     training_step(batch)
 
 
-test_X, test_Y = gen_images(10, True)
+test_X, test_Y = gen_images(2, True)
 
 # a = sess.run(accuracy, {X: test_X, Y_: test_Y})
 # print("Test accuracy:" + str(a))
@@ -100,3 +101,7 @@ predictions = sess.run(Y, {X: test_X})
 
 print np.argmax(predictions, 1)
 print np.argmax(test_Y, 1)
+
+# print test_Y
+# print "======"
+# print predictions
