@@ -10,11 +10,16 @@ if len(sys.argv) < 2:
     sys.exit(1)
 
 image = pil.Image.open(sys.argv[1])
-imageData = np.asarray(image)
 
-if imageData.shape[0] != IMAGE_HEIGHT or imageData.shape[1] != IMAGE_WIDTH or imageData.shape[2] != 3:
-    print "Image must be 28x28 and have 3 channels (RGB)"
+#Make sure the image is of right size
+if image.size[0] != IMAGE_WIDTH or image.size[1] != IMAGE_HEIGHT:
+    print "Image must be 28x28"
     sys.exit(1)
+
+#Convert to greyscale and give a depth of 1
+image = image.convert('L')
+imageData = np.asarray(image)
+imageData = np.reshape(imageData, (IMAGE_HEIGHT, IMAGE_WIDTH, 1))
 
 test_X = np.array([imageData])
 

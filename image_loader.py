@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 
 IMAGE_WIDTH = 28
 IMAGE_HEIGHT = 28
-IMAGE_DEPTH = 3
+IMAGE_DEPTH = 1
 ALLOWED_CHARS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
 
 def gen_images(sampleCount, saveImages=False):
@@ -27,18 +27,22 @@ def gen_images(sampleCount, saveImages=False):
             fontIndex = random.randint(0, len(fontList) - 1)
             font = ImageFont.truetype(fontList[fontIndex], fontSize)
 
-            img = Image.new("RGB", (IMAGE_WIDTH, IMAGE_HEIGHT), (0,0,0))
+            img = Image.new("L", (IMAGE_WIDTH, IMAGE_HEIGHT), (0))
             draw = ImageDraw.Draw(img)
 
             xPos = random.randint(2, 10)
             yPos = random.randint(2, 10)
-            draw.text((xPos, yPos), ch, (255, 255, 255), font=font)
+            draw.text((xPos, yPos), ch, (255), font=font)
             del draw
             
             if saveImages:
                 img.save("image-" + str(charIndex * sampleCount + i) + ".png")
+            
+            imageData = np.asarray(img)
+            #Reshape to have 1 depth.
+            imageData = np.reshape(imageData, (IMAGE_HEIGHT, IMAGE_WIDTH, IMAGE_DEPTH))
 
-            imageResult[charIndex * sampleCount + i] = np.asarray(img) 
+            imageResult[charIndex * sampleCount + i] = imageData
 
             thisClass = np.zeros(len(ALLOWED_CHARS))
             thisClass[charIndex] = 1.0
