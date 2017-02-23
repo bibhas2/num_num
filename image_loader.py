@@ -16,6 +16,7 @@ DEFAULT_FONTS = [
     "Montserrat-Regular.ttf", 
     "Merriweather-Regular.ttf"]
 
+WHITE_THRESHOLD=20
 
 def gen_images(sampleCount, saveImages=False, fontList=DEFAULT_FONTS):
     imageResult = np.zeros((sampleCount * len(ALLOWED_CHARS), IMAGE_HEIGHT, IMAGE_WIDTH, IMAGE_DEPTH))
@@ -35,10 +36,14 @@ def gen_images(sampleCount, saveImages=False, fontList=DEFAULT_FONTS):
             draw.text((xPos, yPos), ch, (255), font=font)
             del draw
             
+            #Threshold image
+            img = img.point(lambda x: 0 if x < WHITE_THRESHOLD else 255, '1')
+
             if saveImages:
                 img.save("image-" + str(charIndex * sampleCount + i) + ".png")
             
             imageData = np.asarray(img)
+
             #Reshape to have 1 depth.
             imageData = np.reshape(imageData, (IMAGE_HEIGHT, IMAGE_WIDTH, IMAGE_DEPTH))
 
@@ -50,3 +55,24 @@ def gen_images(sampleCount, saveImages=False, fontList=DEFAULT_FONTS):
             classResult[charIndex * sampleCount + i] = thisClass
 
     return (imageResult, classResult)
+
+def loadImageData(fileName):
+    image = Image.open(fileName)
+
+    #Make sure the image is of right size
+    if image.size[0] != IMAGE_WIDTH or image.size[1] != IMAGE_HEIGHT:
+        print "Image must be 28x28"
+        sys.exit(1)
+
+    #Convert to greyscale and give a depth of 1
+    image = image.convert('L')
+
+    #Threshold image
+    image = image.point(lambda x: 0 if x < WHITE_THRESHOLD else 255, '1')
+
+    imageData = np.asarray(image)
+    #Reshape to have 1 depth.
+    imageData = np.reshape(imageData, (IMAGE_HEIGHT, IMAGE_WIDTH, 1))
+
+    return imageData
+    

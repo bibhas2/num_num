@@ -1,7 +1,7 @@
 import numpy as np
 import tensorflow as tf
 from model import build_model
-from image_loader import IMAGE_WIDTH, IMAGE_HEIGHT, IMAGE_DEPTH , ALLOWED_CHARS, gen_images
+from image_loader import gen_images
 
 # You can call this function in a loop to train the model, 100 images at a time
 def training_step(i):
@@ -27,5 +27,6 @@ sess.run(init)
 for batch in range(0, 300):
     training_step(batch)
 
+#Save the weights and biases
 saver = tf.train.Saver()
 saver.save(sess, "./model.ckpt")

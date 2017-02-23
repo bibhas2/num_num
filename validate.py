@@ -1,7 +1,7 @@
 import numpy as np
 import tensorflow as tf
 from model import build_model
-from image_loader import IMAGE_WIDTH, IMAGE_HEIGHT, IMAGE_DEPTH , ALLOWED_CHARS, gen_images
+from image_loader import gen_images
 
 X, Y_, accuracy, Y, optimizer = build_model()
 # init
