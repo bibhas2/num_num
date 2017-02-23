@@ -12,7 +12,7 @@ def build_model():
     K = 4  # first convolutional layer output depth
     L = 8  # second convolutional layer output depth
     M = 12  # third convolutional layer
-    N = 200  # fully connected layer
+    N = 400  # fully connected layer
 
     # The model
     Y1 = conv_layer(X, K, 5, 1)

@@ -10,14 +10,14 @@ IMAGE_WIDTH = 28
 IMAGE_HEIGHT = 28
 IMAGE_DEPTH = 1
 ALLOWED_CHARS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
+DEFAULT_FONTS = [
+    "Roboto-Medium.ttf", 
+    "Slabo27px-Regular.ttf", 
+    "Montserrat-Regular.ttf", 
+    "Merriweather-Regular.ttf"]
 
-def gen_images(sampleCount, saveImages=False):
-    fontList = [
-        "Roboto-Medium.ttf", 
-        "Slabo27px-Regular.ttf", 
-        "Montserrat-Regular.ttf", 
-        "Merriweather-Regular.ttf"]
 
+def gen_images(sampleCount, saveImages=False, fontList=DEFAULT_FONTS):
     imageResult = np.zeros((sampleCount * len(ALLOWED_CHARS), IMAGE_HEIGHT, IMAGE_WIDTH, IMAGE_DEPTH))
     classResult = np.zeros((sampleCount * len(ALLOWED_CHARS), len(ALLOWED_CHARS)))
 

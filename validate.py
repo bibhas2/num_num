@@ -11,12 +11,18 @@ sess.run(init)
 saver = tf.train.Saver()
 saver.restore(sess, "./model.ckpt")
 
-test_X, test_Y = gen_images(5, True)
+print "Using default fonts"
+test_X, test_Y = gen_images(50)
 
-print "Generated test images. Getting predictions."
 predictions = sess.run(Y, {X: test_X})
+a = sess.run(accuracy, {X: test_X, Y_: test_Y})
+print("Test accuracy:" + str(a))
 
-print "Calculating accuracy."
+#Use unseen fonts
+print "Using unseen fonts"
+test_X, test_Y = gen_images(50, fontList=["Amiko-Regular.ttf", "DroidSerif.ttf", "Lato-Regular.ttf"])
+
+predictions = sess.run(Y, {X: test_X})
 a = sess.run(accuracy, {X: test_X, Y_: test_Y})
 print("Test accuracy:" + str(a))
 

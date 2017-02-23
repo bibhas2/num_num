@@ -24,7 +24,7 @@ init = tf.global_variables_initializer()
 sess = tf.Session()
 sess.run(init)
 
-for batch in range(0, 400):
+for batch in range(0, 300):
     training_step(batch)
 
 saver = tf.train.Saver()
