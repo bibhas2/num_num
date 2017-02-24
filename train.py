@@ -24,7 +24,7 @@ init = tf.global_variables_initializer()
 sess = tf.Session()
 sess.run(init)
 
-for batch in range(0, 300):
+for batch in range(0, 600):
     training_step(batch)
 
 #Save the weights and biases
