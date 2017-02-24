@@ -11,8 +11,6 @@ NUM_IMAGES = test_X.shape[0]
 
 np.divide(test_X, NUM_IMAGES)
 
-# averageData = np.zeros((test_X.shape[1], test_X.shape[2], test_X.shape[3])
-
 averageData = np.sum(test_X, 0)
 
 averageData = np.reshape(averageData, (test_X.shape[1], test_X.shape[2]))

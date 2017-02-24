@@ -9,14 +9,14 @@ def build_model():
 
     # three convolutional layers with their channel counts, and a
     # fully connected layer (tha last layer has 10 softmax neurons)
-    K = 4  # first convolutional layer output depth
-    L = 8  # second convolutional layer output depth
-    M = 12  # third convolutional layer
+    K = 40  # first convolutional layer output depth
+    L = 20  # second convolutional layer output depth
+    M = 10  # third convolutional layer
     N = 400  # fully connected layer
 
     # The model
-    Y1 = conv_layer(X, K, 5, 1)
-    Y2 = conv_layer(Y1, L, 5, 2)
+    Y1 = conv_layer(X, K, 3, 1)
+    Y2 = conv_layer(Y1, L, 4, 2)
     Y3 = conv_layer(Y2, M, 5, 2)
     Y4 = fully_connected_layer(Y3, N)
     Ylogits, Y = readout_layer(Y4, len(ALLOWED_CHARS))

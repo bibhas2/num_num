@@ -7,7 +7,7 @@ from image_loader import gen_images
 def training_step(i):
     # training on batches of 100 images with 100 labels
     # batch_X, batch_Y = mnist.train.next_batch(100)
-    batch_X, batch_Y = gen_images(100)
+    batch_X, batch_Y = gen_images(50)
 
     learning_rate = 0.001
     #Compute accuracy every once in a while

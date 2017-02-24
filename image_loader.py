@@ -31,8 +31,8 @@ def gen_images(sampleCount, saveImages=False, fontList=DEFAULT_FONTS):
             img = Image.new("L", (IMAGE_WIDTH, IMAGE_HEIGHT), (0))
             draw = ImageDraw.Draw(img)
 
-            xPos = random.randint(-10, 25)
-            yPos = random.randint(-15, 20)
+            xPos = random.randrange(-7, IMAGE_WIDTH - 2, 3)
+            yPos = random.randrange(-12, IMAGE_HEIGHT - 10, 3)
             draw.text((xPos, yPos), ch, (255), font=font)
             del draw
             
