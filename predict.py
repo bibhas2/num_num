@@ -12,7 +12,7 @@ if len(sys.argv) < 2:
 imageData = loadImageData(sys.argv[1])
 test_X = np.array([imageData])
 
-X, Y_, accuracy, Y, optimizer = build_model()
+X, Y_, accuracy, Y, optimizer, _ = build_model()
 # init
 init = tf.global_variables_initializer()
 sess = tf.Session()

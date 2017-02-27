@@ -44,10 +44,13 @@ def create_optimizer(Ylogits, predictions, labels):
     correct_prediction = tf.equal(tf.argmax(predictions, 1), tf.argmax(labels, 1))
     accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 
-    # training step, the learning rate is a placeholder
-    graph = tf.train.AdamOptimizer().minimize(cross_entropy)
+    # Learning rate
+    lr = tf.placeholder(tf.float32)
 
-    return (graph, accuracy)
+    # training step, the learning rate is a placeholder
+    graph = tf.train.AdamOptimizer(lr).minimize(cross_entropy)
+
+    return (graph, lr, accuracy)
 
 def max_pool_layer(inputTensor, windowSize, stride):
   return tf.nn.max_pool(inputTensor, ksize=[1, windowSize, windowSize, 1],

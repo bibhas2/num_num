@@ -3,7 +3,7 @@ import tensorflow as tf
 from model import build_model
 from image_loader import gen_images
 
-X, Y_, accuracy, Y, optimizer = build_model()
+X, Y_, accuracy, Y, optimizer, _ = build_model()
 # init
 init = tf.global_variables_initializer()
 sess = tf.Session()

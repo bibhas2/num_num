@@ -21,6 +21,6 @@ def build_model():
     Y4 = fully_connected_layer(Y3, N)
     Ylogits, Y = readout_layer(Y4, len(ALLOWED_CHARS))
 
-    optimizer, accuracy = create_optimizer(Ylogits, Y, Y_)
+    optimizer, learningRate, accuracy = create_optimizer(Ylogits, Y, Y_)
 
-    return (X, Y_, accuracy, Y, optimizer)
+    return (X, Y_, accuracy, Y, optimizer, learningRate)
